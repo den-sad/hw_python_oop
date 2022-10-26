@@ -1,4 +1,7 @@
+# Количесвто метров в киллометрах
 M_IN_KM = 1000
+# Количесвто минут в часах
+MM_IN_HH = 3600
 
 
 class InfoMessage:
@@ -78,7 +81,7 @@ class Running(Training):
         # / M_IN_KM * время_тренировки_в_минутах
         return ((CALORIES_MEAN_SPEED_MULTIPLIER * super().get_mean_speed()
                 + CALORIES_MEAN_SPEED_SHIFT)
-                * self.weight / M_IN_KM * self.duration)
+                * self.weight / M_IN_KM * self.duration * 60)
 
 
 class SportsWalking(Training):
@@ -94,14 +97,16 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        WEIGHT_MULTIPLICATOR_1 = 0.035
-        WEIGHT_MULTIPLICATOR_2 = 0.035
+        CALORIES_WEIGHT_MULTIPLIER = 0.035
+        WEIGHT_MULTIPLICATOR_2 = 0.029
 
         # ((0.035 * вес + (средняя_скорость_в_метрах_в_секунду**2
         # / рост_в_метрах) * 0.029 * вес) * время_тренировки_в_минутах)
-        return ((WEIGHT_MULTIPLICATOR_1 * self.weight
-                 + (super().get_mean_speed()**2 / self.height)
-                 * WEIGHT_MULTIPLICATOR_2 * self.weight) * self.duration)
+        return ((CALORIES_WEIGHT_MULTIPLIER * self.weight
+                 + ((super().get_mean_speed() * (M_IN_KM / MM_IN_HH)) ** 2
+                    / self.height)
+                 * WEIGHT_MULTIPLICATOR_2 * self.weight)
+                * self.duration * 60)
 
 
 class Swimming(Training):
@@ -112,13 +117,13 @@ class Swimming(Training):
                  duration: float,
                  weight: float,
                  length_pool: float,
-                 count_pool: float
+                 count_pool: float,
+                 LEN_STEP: float = 1.38
                  ) -> None:
         super().__init__(action, duration, weight)
         self.length_pool = length_pool
         self.count_pool = count_pool
-        # Переопределяем расстояние за 1 гребок
-        self.LEN_STEP = 1.38
+        self.LEN_STEP = LEN_STEP
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
@@ -127,12 +132,12 @@ class Swimming(Training):
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        SPEED_MULTIPLICATOR_1 = 1.1
-        SPEED_MULTIPLICATOR_2 = 2
+        SPEED_ADDITIVE = 1.1
+        SPEED_MULTIPLICATOR = 2
 
         # (средняя_скорость + 1.1) * 2 * вес * время_тренировки
-        return ((super().get_mean_speed() * SPEED_MULTIPLICATOR_1)
-                * SPEED_MULTIPLICATOR_2
+        return ((super().get_mean_speed() + SPEED_ADDITIVE)
+                * SPEED_MULTIPLICATOR
                 * self.weight * self.duration)
 
 
